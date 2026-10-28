@@ -1,0 +1,36 @@
+{
+  "name": "GOLDEN-EYE 源巡检监控",
+  "display_name": "GOLDEN-EYE 源巡检监控",
+  "category": "媒体运维 / 监控",
+  "summary": "输入驱动的直播/点播源健康巡检连接器（MCP Server）：检测采集接口能否搜索并返回 m3u8、直播 m3u8 是否可达，输出可用源清单与延迟。",
+  "description": "本连接器仅做源可达性探测，不提供、不存储任何视频内容，被探测地址由使用者自行提供并对其合法性负责。适用于拥有合法内容源的站点做源健康监控、故障告警与冗余调度。",
+  "protocol": "MCP",
+  "transport": "streamable-http",
+  "mcp_endpoint": "https://ge-connector.yourdomain.com/mcp",
+  "auth": {
+    "type": "api_key",
+    "header": "Authorization",
+    "format": "Bearer <key>"
+  },
+  "tools": [
+    {
+      "name": "check_source",
+      "desc": "探测单个源：传入 name/url/kind(vod_api|m3u8|auto)/keyword，返回状态(GOOD/ERR/...)、延迟ms、m3u8条数。",
+      "params": {
+        "name": "源显示名（任意字符串）",
+        "url": "待测源地址（必填）",
+        "kind": "vod_api | m3u8 | auto（默认 auto）",
+        "keyword": "vod_api 探测用的搜索词，默认 test"
+      }
+    },
+    {
+      "name": "batch_check",
+      "desc": "批量探测多个源，返回每个源的巡检结果与总览。",
+      "params": {
+        "items": "源对象数组，每项含 name/url/kind/keyword",
+        "workers": "并发数，默认 8"
+      }
+    }
+  ],
+  "compliance_note": "探测能力中立，与所探测内容是否授权无关；不内置任何源池，所有 URL 由调用方提供。"
+}

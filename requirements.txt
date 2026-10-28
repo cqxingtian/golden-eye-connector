@@ -1,0 +1,3 @@
+# GOLDEN-EYE 源巡检连接器依赖
+# 锁定 1.x：2.x 把 FastMCP 重命名为 MCPServer、API 大改；1.x 的 FastMCP 稳定且文档齐全
+mcp>=1.9,<2
