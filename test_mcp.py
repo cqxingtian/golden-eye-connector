@@ -8,8 +8,13 @@ from mcp.client.streamable_http import streamablehttp_client
 
 
 async def main():
-    base = os.environ.get("TEST_URL", "http://127.0.0.1:8799/mcp")
-    async with streamablehttp_client(base) as (read, write, _):
+    # 端口/密钥均可由环境变量覆盖，便于测不同环境：
+    #   TEST_URL=http://127.0.0.1:8801/mcp TEST_KEY=ge-test-7788 python test_mcp.py
+    port = os.environ.get("PORT", "8799")
+    base = os.environ.get("TEST_URL", "http://127.0.0.1:%s/mcp" % port)
+    api_key = os.environ.get("TEST_KEY", "").strip()
+    headers = {"Authorization": "Bearer " + api_key} if api_key else None
+    async with streamablehttp_client(base, headers=headers) as (read, write, _):
         async with ClientSession(read, write) as session:
             await session.initialize()
             tools = await session.list_tools()

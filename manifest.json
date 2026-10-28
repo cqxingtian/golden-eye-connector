@@ -7,31 +7,26 @@
   "summary": "输入驱动的直播/点播源健康巡检 MCP 连接器：检测采集接口能否搜索并返回 m3u8、直播 m3u8 是否可达，输出可用源清单与延迟。",
   "description": "输入驱动的源健康巡检连接器。对点播采集接口，检测其能否被搜索并返回可用 m3u8 播放地址；对直播源，检测 m3u8 是否可达、切片数量多少、响应耗时多少。输出每个源的状态与延迟，可用于日常健康巡检、多源冗余调度与故障告警。",
   "compliance_note": "本连接器仅做源可达性探测，不提供、不存储任何视频内容；被探测的地址由使用者自行提供并对其合法性负责。本工具为中立技术能力，与所探测内容是否授权无关，适用于拥有合法内容源的站点做源健康监控、故障告警与冗余调度。",
-
   "protocol": "MCP",
   "transport": "streamable-http",
   "mcp_endpoint_path": "/mcp",
   "health_check_path": "/health",
-
   "runtime": {
     "language": "python",
     "version": "3.13",
     "entry_command": "python mcp_server.py",
     "dependencies_file": "requirements.txt"
   },
-
   "env": {
     "HOST": "0.0.0.0",
     "PORT": "10000",
-    "CONNECTOR_API_KEY": "部署后填写：用于 Bearer 鉴权，留空则不鉴权（仅建议本地调试）"
+    "CONNECTOR_API_KEY": ""
   },
-
   "auth": {
     "type": "api_key",
     "header": "Authorization",
     "format": "Bearer <key>"
   },
-
   "tools": [
     {
       "name": "check_source",
@@ -49,7 +44,11 @@
           },
           "kind": {
             "type": "string",
-            "enum": ["vod_api", "m3u8", "auto"],
+            "enum": [
+              "vod_api",
+              "m3u8",
+              "auto"
+            ],
             "default": "auto",
             "description": "源类型。auto=按 URL 自动判断（默认）"
           },
@@ -59,7 +58,9 @@
             "description": "仅 vod_api 使用，探测时用来搜索的词"
           }
         },
-        "required": ["url"]
+        "required": [
+          "url"
+        ]
       },
       "output_description": "JSON 字符串，含 status / ms(毫秒) / m3u8 或 segments 数量 / detail。status 取值：GOOD | NO_M3U8 | EMPTY | BAD_JSON | ERR | NOT_PLAYLIST | NO_URL"
     },
@@ -75,12 +76,27 @@
             "items": {
               "type": "object",
               "properties": {
-                "name": { "type": "string" },
-                "url": { "type": "string" },
-                "kind": { "type": "string", "enum": ["vod_api", "m3u8", "auto"] },
-                "keyword": { "type": "string" }
+                "name": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "vod_api",
+                    "m3u8",
+                    "auto"
+                  ]
+                },
+                "keyword": {
+                  "type": "string"
+                }
               },
-              "required": ["url"]
+              "required": [
+                "url"
+              ]
             }
           },
           "workers": {
@@ -89,7 +105,9 @@
             "description": "并发探测数"
           }
         },
-        "required": ["items"]
+        "required": [
+          "items"
+        ]
       },
       "output_description": "JSON 字符串，含 total(总数) 与 results(各源结果数组，结构同 check_source)"
     }

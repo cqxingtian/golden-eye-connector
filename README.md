@@ -33,13 +33,33 @@ PORT=9000 CONNECTOR_API_KEY=sk-xxx python mcp_server.py
   - `status`：`GOOD` | `NO_M3U8` | `EMPTY` | `BAD_JSON` | `ERR` | `NOT_PLAYLIST` | `NO_URL`
 - `batch_check(items, workers=8)` → 批量探测，返回 `{total, results}`
 
-## 上线两步（详见子文档）
-1. **部署**：推荐走 **Render（连 GitHub 自动部署）** 👉 见 `RENDER-DEPLOY.md`。
-   代码已推送至 `github.com/cqxingtian/golden-eye-connector`，并已配好 `render.yaml` 蓝图，
-   **全程网页点击、无需在本地安装任何命令行工具**，部署后即得 `https://<服务名>.onrender.com`。
-   备选：Railway（见 `RAILWAY-DEPLOY.md`，其注册功能因事故曾临时关闭）；或自有云 Docker（见 `DEPLOY.md`）。
-2. **发布**：见 `PUBLISH-CONNECTOR.md` —— 在 open.workbuddy.cn「发布管理 → 连接器」逐项填表，
-   端点填 `https://你的域名/mcp`、鉴权填对应 `CONNECTOR_API_KEY`，并贴上合规声明；设为付费连接器即可变现。
+## 上线方式（详见子文档）
+
+### 主路径：打包上传（平台托管）
+open.workbuddy.cn「发布管理 → 连接器 → 发布连接器」**要求上传代码压缩包**（.zip，≤20MB），
+平台自动解包解析并生成连接器 ID，**由平台托管运行**。
+
+**必须包含 `connector-meta.json` 且在 zip 根目录**（否则报
+`解析失败：未找到 connector-meta.json`），本仓库已提供。
+
+打包命令（在本目录执行，直接取已提交的文件，自动排除 .git / __pycache__ / venv）：
+```bash
+git archive --format=zip --output=D:\golden-eye-connector-package.zip HEAD
+```
+
+### 备用：自有公网端点（Render / Railway）
+若你需要一个自己掌控、可常驻的公网 MCP 实例（平台托管之外的备份），可自行部署：
+- **Render**（连 GitHub 自动部署）👉 见 `RENDER-DEPLOY.md`
+- **Railway** 👉 见 `RAILWAY-DEPLOY.md`（其注册功能曾因事故临时关闭）
+- **自有云 Docker** 👉 见 `DEPLOY.md`（推荐国内云，探测国内源延迟低）
+
+> 注：与早期判断不同，WorkBuddy 连接器发布**不是**"提交一个远程 URL"，而是上传代码包。
+> 自有部署属于可选的补充，不影响平台发布。
+
+### 发布信息填写
+见 `PUBLISH-CONNECTOR.md`：名称、简介、工具说明、合规声明均已写好，可直接复制；
+若平台表单要求端点，填 `https://你的域名/mcp`，鉴权密钥填与服务器一致的 `CONNECTOR_API_KEY`；
+设为付费连接器即可变现。
 
 ## 端点说明
 - `/mcp` —— **MCP 协议端点**（发布用）。设了 `CONNECTOR_API_KEY` 时，必须带 `Authorization: Bearer <密钥>`，否则返回 401。

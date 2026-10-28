@@ -25,28 +25,31 @@ from probe import probe_one, probe_batch
 HOST = os.environ.get("HOST", "0.0.0.0")
 PORT = int(os.environ.get("PORT", "8787"))
 API_KEY = os.environ.get("CONNECTOR_API_KEY", "").strip()
+# 传输方式：http = 远程 Streamable HTTP（默认，端点 /mcp）；stdio = 平台以本地进程方式拉起
+TRANSPORT = os.environ.get("MCP_TRANSPORT", "http").strip().lower()
 
 mcp = FastMCP("golden-eye-connector", host=HOST, port=PORT)
 
 
 @mcp.tool()
-def check_source(name: str, url: str, kind: str = "auto", keyword: str = "test") -> str:
+def check_source(url: str, name: str = "", kind: str = "auto", keyword: str = "test") -> str:
     """探测单个视频源是否可用。
 
     本工具仅做 HTTP 可达性探测，不提供、不存储任何视频内容；被探测的 URL 由调用方提供。
 
     Args:
-        name: 源显示名（任意字符串，便于识别）
         url: 待测源地址，必填。点播采集接口形如 https://x.com/api.php/provide/vod；直播为 .m3u8 地址
+        name: 源显示名（可选，便于识别；留空则用 url 代替）
         kind: 源类型。vod_api=点播采集接口；m3u8=直播/HLS 播放列表；auto=按 URL 自动判断（默认）
         keyword: 仅 vod_api 使用，探测时用来搜索的词，默认 test
 
     Returns:
         JSON 字符串，含 status / ms(毫秒) / m3u8 或 segments 数量 / detail
         status 取值：GOOD（可用） | NO_M3U8（能搜但无播放地址） | EMPTY（无结果） |
-                     BAD_JSON（非预期格式） | ERR（不可达/超时） | NOT_PLAYLIST（返回了网页） | NO_URL（缺地址）
+                     BAD_JSON（非预期格式） | ERR（不可达/超时） | NOT_PLAYLIST（返回了网页） |
+                     NO_URL（缺地址） | BLOCKED（地址被安全策略拦截）
     """
-    res = probe_one({"name": name, "url": url, "kind": kind, "keyword": keyword})
+    res = probe_one({"name": name or url, "url": url, "kind": kind, "keyword": keyword})
     return json.dumps(res, ensure_ascii=False)
 
 
@@ -118,10 +121,15 @@ def _health_bypass(app):
 
 
 if __name__ == "__main__":
-    inner = mcp.streamable_http_app()
-    app = _auth_wrapper(inner) if API_KEY else inner
-    app = _health_bypass(app)  # 健康检查路径放最外层，免鉴权
-    import uvicorn
+    if TRANSPORT == "stdio":
+        # 平台以本地子进程方式拉起时走 stdio
+        mcp.run(transport="stdio")
+    else:
+        # 默认：远程 Streamable HTTP，端点 /mcp
+        inner = mcp.streamable_http_app()
+        app = _auth_wrapper(inner) if API_KEY else inner
+        app = _health_bypass(app)  # 健康检查路径放最外层，免鉴权
+        import uvicorn
 
-    uvicorn.run(app, host=HOST, port=PORT)
+        uvicorn.run(app, host=HOST, port=PORT)
     print("GOLDEN-EYE 源巡检连接器 (MCP) 已停止")

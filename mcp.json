@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "golden-eye-connector": {
+      "name": "GOLDEN-EYE 源巡检监控",
+      "description": "输入驱动的直播/点播源健康巡检 MCP 连接器：检测采集接口能否搜索并返回 m3u8、直播 m3u8 是否可达，输出可用源清单与延迟。",
+      "transport": "streamable-http",
+      "command": "python",
+      "args": ["mcp_server.py"],
+      "env": {
+        "HOST": "0.0.0.0",
+        "PORT": "10000",
+        "MCP_TRANSPORT": "http",
+        "CONNECTOR_API_KEY": ""
+      },
+      "endpoint": "/mcp",
+      "url": "http://127.0.0.1:10000/mcp",
+      "requirements": "requirements.txt",
+      "tools": ["check_source", "batch_check"]
+    }
+  }
+}

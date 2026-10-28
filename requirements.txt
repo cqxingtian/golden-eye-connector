@@ -1,3 +1,6 @@
 # GOLDEN-EYE 源巡检连接器依赖
 # 锁定 1.x：2.x 把 FastMCP 重命名为 MCPServer、API 大改；1.x 的 FastMCP 稳定且文档齐全
 mcp>=1.9,<2
+# mcp_server.py 直接 import uvicorn，属于直接依赖，必须显式声明，
+# 不能依赖 mcp 的传递依赖（否则上游移除后构建通过但运行崩溃）
+uvicorn>=0.30
