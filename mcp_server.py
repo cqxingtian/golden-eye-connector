@@ -86,10 +86,42 @@ def _auth_wrapper(app):
     return wrapper
 
 
+def _health_bypass(app):
+    """平台健康检查放行：/ 与 /health 直接返回 200，不走鉴权、不走 MCP。
+
+    Render / Railway / Koyeb 等平台会定期探测服务根路径，若返回 401/404 会判定
+    服务不健康并终止容器，因此这两个路径必须免鉴权返回 200。
+    """
+    async def wrapper(scope, receive, send):
+        if scope.get("type") == "http" and scope.get("path") in ("/", "/health"):
+            payload = json.dumps(
+                {
+                    "ok": True,
+                    "service": "golden-eye-connector",
+                    "mcp_endpoint": "/mcp",
+                    "tools": ["check_source", "batch_check"],
+                },
+                ensure_ascii=False,
+            ).encode("utf-8")
+            await send(
+                {
+                    "type": "http.response.start",
+                    "status": 200,
+                    "headers": [(b"content-type", b"application/json; charset=utf-8")],
+                }
+            )
+            await send({"type": "http.response.body", "body": payload})
+            return
+        await app(scope, receive, send)
+
+    return wrapper
+
+
 if __name__ == "__main__":
-    if API_KEY:
-        import uvicorn
-        uvicorn.run(_auth_wrapper(mcp.streamable_http_app()), host=HOST, port=PORT)
-    else:
-        mcp.run(transport="streamable-http")
+    inner = mcp.streamable_http_app()
+    app = _auth_wrapper(inner) if API_KEY else inner
+    app = _health_bypass(app)  # 健康检查路径放最外层，免鉴权
+    import uvicorn
+
+    uvicorn.run(app, host=HOST, port=PORT)
     print("GOLDEN-EYE 源巡检连接器 (MCP) 已停止")

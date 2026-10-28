@@ -34,10 +34,17 @@ PORT=9000 CONNECTOR_API_KEY=sk-xxx python mcp_server.py
 - `batch_check(items, workers=8)` → 批量探测，返回 `{total, results}`
 
 ## 上线两步（详见子文档）
-1. **部署**：推荐走 **Railway 零服务器部署** 👉 见 `RAILWAY-DEPLOY.md`（已配好 `Procfile`/`railway.json`，代码已初始化为 Git 仓库，按手册推到 GitHub 即可自动部署拿 HTTPS 域名）。
-   也有 Docker 自有云方案 👉 见 `DEPLOY.md`（推荐国内云，探测国内源延迟低）。
+1. **部署**：推荐走 **Render（连 GitHub 自动部署）** 👉 见 `RENDER-DEPLOY.md`。
+   代码已推送至 `github.com/cqxingtian/golden-eye-connector`，并已配好 `render.yaml` 蓝图，
+   **全程网页点击、无需在本地安装任何命令行工具**，部署后即得 `https://<服务名>.onrender.com`。
+   备选：Railway（见 `RAILWAY-DEPLOY.md`，其注册功能因事故曾临时关闭）；或自有云 Docker（见 `DEPLOY.md`）。
 2. **发布**：见 `PUBLISH-CONNECTOR.md` —— 在 open.workbuddy.cn「发布管理 → 连接器」逐项填表，
    端点填 `https://你的域名/mcp`、鉴权填对应 `CONNECTOR_API_KEY`，并贴上合规声明；设为付费连接器即可变现。
+
+## 端点说明
+- `/mcp` —— **MCP 协议端点**（发布用）。设了 `CONNECTOR_API_KEY` 时，必须带 `Authorization: Bearer <密钥>`，否则返回 401。
+- `/health`、`/` —— **健康检查端点**，**免鉴权**，恒定返回 200（供 Render 等平台探活，避免容器被误杀）。
+- 未设 `CONNECTOR_API_KEY` 时全程不鉴权，仅建议本地调试使用。
 
 ## 变现路径
 - 开放平台「收入变现」设为付费连接器（按调用/订阅计费）；
@@ -49,5 +56,8 @@ PORT=9000 CONNECTOR_API_KEY=sk-xxx python mcp_server.py
 - `server.py` 零依赖 HTTP REST API（调试备用）
 - `test_mcp.py` 端到端验证脚本
 - `requirements.txt` / `Dockerfile` 部署用
-- `DEPLOY.md` / `PUBLISH-CONNECTOR.md` 上线指南
+- `render.yaml` Render Blueprint（连 GitHub 一键部署）
+- `RAILWAY-DEPLOY.md` / `RAILWAY-CLI-CHEATSHEET.md` Railway 路线（备选）
+- `DEPLOY.md` / `PUBLISH-CONNECTOR.md` / `RENDER-DEPLOY.md` 上线指南
+- `PUBLISH-ROADMAP.md` 非技术用户发布全景路线图
 - `workbuddy-connector-manifest.json` 注册表单填表参考

@@ -1,0 +1,34 @@
+# GOLDEN-EYE 源巡检连接器 · Render Blueprint
+#
+# 作用：让 Render 从你的 GitHub 仓库自动拉取代码、按本文件部署，
+#       全程网页点击，不需要在本地安装任何命令行工具。
+#
+# 用法：Render 面板 → New → Blueprint → 选择 github.com/cqxingtian/golden-eye-connector
+#       → 应用此文件 → 部署完成后，在 Environment 里补填 CONNECTOR_API_KEY
+#
+# 部署成功后：
+#   公网地址   https://<服务名>.onrender.com
+#   MCP 端点   https://<服务名>.onrender.com/mcp      ← 填到 WorkBuddy 连接器表单
+#   健康检查   https://<服务名>.onrender.com/health    ← 免鉴权，返回 200
+
+services:
+  - type: web
+    name: golden-eye-connector
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    # 新加坡节点：离国内近，探测国内视频源延迟更低
+    region: singapore
+    # 平台会定期探测此路径判断服务存活；该路径已做免鉴权处理，恒定返回 200
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      # Render 会自动注入 PORT；此处显式指定为 Render 约定端口，避免歧义
+      - key: PORT
+        value: "10000"
+      - key: HOST
+        value: "0.0.0.0"
+      # 密钥不写入仓库（sync: false），部署后在 Render 面板 Environment 里手动填
+      # 该密钥需与 WorkBuddy 连接器注册时填的密钥完全一致
+      - key: CONNECTOR_API_KEY
+        sync: false
