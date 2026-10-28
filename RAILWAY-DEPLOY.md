@@ -1,80 +1,79 @@
-# GOLDEN-EYE 源巡检连接器 · Railway 部署手册（个人零服务器）
+# GOLDEN-EYE 源巡检连接器 · Railway 部署手册（免 GitHub 版）
 
-> 这是「路线图」里的 **路线 B**。目标：不用买服务器、不用管运维，让 Railway 自动把代码部署成一个公网 HTTPS 的 MCP 连接器。
-> 你只需：① 在 GitHub 网页建个空仓库；② 跑两条命令把代码推上去；③ 在 Railway 网页点几下连仓库。
+> 个人发布连接器需要公网 HTTPS 地址。本手册用 **Railway CLI** 把 `D:\golden-eye-connector` 这个本地文件夹**直接推上去部署**，全程**不需要 GitHub、不需要建仓库、不需要买服务器**。
+> 部署完成后你会拿到一个 `https://xxx.up.railway.app/mcp` 的地址，用来在 WorkBuddy 注册变现。
 
 ---
 
 ## 我已经帮你做完的部分（你不用动）
-- ✅ 代码已按 Railway 要求配好：读取 `PORT` 环境变量、绑 `0.0.0.0`（`mcp_server.py`）。
-- ✅ 已加 Railway 启动声明：`Procfile`、`railway.json`、`.gitignore`。
-- ✅ 已初始化 Git 仓库并提交（本地，位置 `D:\golden-eye-connector`）。
-- ⏳ 你只需把它**推到 GitHub** 再**接 Railway** 即可上线。
+- ✅ 代码已按 Railway 要求配好：读 `PORT` 环境变量、绑 `0.0.0.0`（`mcp_server.py`）。
+- ✅ 已加 Railway 启动声明：`Procfile`、`railway.json`、`.gitignore`（Railway 靠它们知道怎么启动和装依赖）。
+- ✅ 已初始化 Git 仓库并提交（本地；用 CLI 路线时这个仓库**用不上**，忽略即可）。
 
 ---
 
-## 第 1 步：在 GitHub 建一个空仓库（网页操作，纯点击）
-1. 浏览器打开 👉 https://github.com/new
-2. **Repository name** 填：`golden-eye-connector`（英文名，随便起）
-3. 选 **Public**（免费最顺；私有也行但免费额度受限）
-4. **不要**勾任何 "Add a README / .gitignore / license"（我们已有文件，避免冲突）
-5. 点绿色 **Create repository**
-6. 创建后的页面会显示一行地址，形如：
-   `https://github.com/你的用户名/golden-eye-connector.git`
-   👉 **复制这行地址**（下一步要用）。
+## 前置：装一次 Node.js（约 2 分钟，只做一次）
+Railway 命令行依赖 Node.js，先装它：
+1. 浏览器打开 👉 https://nodejs.org
+2. 点 **LTS**（长期支持版，如 20.x 或 22.x）的下载按钮，得到 `.msi` 安装包
+3. 双击安装，**一路 Next / 同意**即可（默认会装好 `npm`）
+4. 验证：打开"命令提示符"(CMD)，输入以下两条，能看到版本号就成功：
+   ```
+   node -v
+   npm -v
+   ```
 
 ---
 
-## 第 2 步：把代码推上去（在你电脑的项目文件夹里执行）
-打开"命令提示符"(CMD) 或"终端"，逐行粘贴执行（**把最后一行地址换成你刚复制的**）：
+## 主路径：Railway CLI 四步部署（免 GitHub）
 
+> 全部在"命令提示符"(CMD) 里操作。建议先把下面命令复制到记事本，按说明替换后逐条粘贴。
+
+### 第 1 步：进入项目目录
 ```
 cd /d/golden-eye-connector
-git remote add origin https://github.com/你的用户名/golden-eye-connector.git
-git branch -M main
-git push -u origin main
 ```
 
-> 💡 第一次 `git push` 会**自动弹出浏览器让你登录 GitHub** → 用你的账号登录即可，登录后推送自动完成。
-> （这是 Git 自带的登录窗口，不是钓鱼，放心登录。）
->
-> 如果没弹窗、提示输入用户名密码：密码处要填 **GitHub 个人访问令牌(PAT)** 而不是账号密码——
-> 去 https://github.com/settings/tokens 点 "Generate new token (classic)"，勾 `repo` 权限，生成后粘贴进去。
+### 第 2 步：安装 Railway 命令行工具（一次性）
+```
+npm install -g railway
+```
+> 第一次会下载一会儿，看到 `added ... packages` 之类就成功。
 
-推送成功后，刷新 GitHub 页面就能看到所有文件。
+### 第 3 步：登录 Railway
+```
+railway login
+```
+> 会自动弹出浏览器 → 用 GitHub 或邮箱注册/登录 Railway（没有就顺手注册一个，免费）。
 
----
+### 第 4 步：建项目并部署（两条命令，最关键）
+```
+railway init
+railway up
+```
+- `railway init`：会提示你给项目起名，直接回车用默认或输入 `golden-eye-connector` 都行；它会创建一个新项目并关联到当前文件夹。
+- `railway up`：把当前文件夹上传并部署。Railway 会自动读 `requirements.txt` 装依赖、按 `Procfile` 启动 `python mcp_server.py`。
+- 看到 **Deployment succeeded / 部署成功** 即完成。
 
-## 第 3 步：Railway 一键部署（网页操作）
-1. 浏览器打开 👉 https://railway.com → 点 **Login** 用 **GitHub** 登录
-2. 点 **New Project** → 选 **Deploy from GitHub repo**
-3. 弹窗里点 **Authorize Railway**（授权它读你的 GitHub 仓库）
-4. 在仓库列表里选中 `golden-eye-connector` → 点 **Deploy**
-5. Railway 会自动：装依赖 → 启动 `python mcp_server.py` → 显示 **Deployment succeeded**
+### 第 5 步：设置访问密码（强烈建议，防别人白嫖算力）
+```
+railway variables:set CONNECTOR_API_KEY=ge-your-strong-key-2026
+```
+> 把 `ge-your-strong-key-2026` 换成**你自己记得住的一串字符**。设完 Railway 会自动重启。
+> ⚠️ 这个密码之后在 WorkBuddy 注册连接器时要填**一模一样**的，记好。
 
-### 设置访问密码（强烈建议，防别人白嫖你的算力）
-部署完成后：
-1. 在 Railway 项目里点 **Variables**（变量）
-2. 新增一行：`CONNECTOR_API_KEY` = 随便一串你记得住的字符，例如 `ge-yOUR-strong-KEY-2026`
-3. 保存，Railway 会自动重启
-> ⚠️ 这个密码之后在 WorkBuddy 注册连接器时**要填一模一样的**，记好。
+### 第 6 步：生成公网地址
+```
+railway domain
+```
+> 会返回形如 `https://golden-eye-connector.up.railway.app` 的地址。
+> 你的 **MCP 端点**就是它在后面加 `/mcp`：
+> `https://golden-eye-connector.up.railway.app/mcp`
 
----
+### 第 7 步：验证在线
+浏览器打开上面的 `/mcp` 地址 —— 看到一段 JSON 或 "Method Not Allowed" 字样，说明服务已在线（MCP 不走浏览器直接访问，这样是正常的）。
 
-## 第 4 步：拿到公网地址
-1. 在 Railway 项目里点 **Settings** → **Networking** → **Generate Domain**
-   （有的版本在 Project 页直接就有 **Generate Domain** 按钮）
-2. 会生成形如：
-   `https://golden-eye-connector.up.railway.app`
-3. 你的 **MCP 端点**就是：
-   `https://golden-eye-connector.up.railway.app/mcp`
-
-✅ 验证在线：浏览器打开上面的 `/mcp` 地址——
-看到一段 JSON 或 "Method Not Allowed" 字样就说明服务已起（MCP 不走浏览器直接访问，这样是正常的）。
-
----
-
-## 第 5 步：发布到 WorkBuddy 变现
+### 第 8 步：发布到 WorkBuddy 变现
 打开同目录的 **`PUBLISH-CONNECTOR.md`**，照"逐项填表"把：
 - **端点** 填成上面的 `https://xxx.up.railway.app/mcp`
 - **鉴权** 填你设的 `CONNECTOR_API_KEY`
@@ -83,27 +82,16 @@ git push -u origin main
 
 ---
 
-## 备用：不想用 GitHub？（Railway CLI 直推，无需 GitHub）
-如果你嫌 GitHub 麻烦，也能不用它——直接用 Railway 官方命令行：
-1. 安装 Node.js（含 npm）后，命令行执行：`npm install -g railway`
-2. 在项目文件夹里执行：
-   ```
-   railway login
-   railway init
-   railway up
-   ```
-   首次 `railway login` 会弹浏览器登录；`railway up` 直接把当前文件夹部署上去，同样给 HTTPS 域名。
-（这条路更短，但需要你会装 Node.js / 敲命令，按你喜好选。）
+## 备用：走 GitHub 仓库部署（如果你更习惯用仓库）
+如果你不想用命令行、更想用网页点，可以走 GitHub 路线（需要先建 GitHub 仓库再推代码）。完整步骤见本目录 `GITHUB-DEPLOY.md`（如不存在，沿用旧版步骤：建空仓库 → `git remote add` + `git push` → Railway "Deploy from GitHub repo"）。
 
 ---
 
 ## 常见问题
 - **Railway 要钱吗？** 新账号有约 $5 免费额度，个人低频探测够用；超额才扣费，可随时删项目止损。
-- **部署失败怎么办？** 在 Railway 项目点 **Deployments** → 点某次部署看日志。最常见是依赖装不上（看 `requirements.txt` 是否完整）。
-- **改了代码怎么更新？** 本地改完，执行：
-  ```
-  git add . && git commit -m "update" && git push
-  ```
-  Railway 会自动重新部署。
-- **域名会变吗？** Generate Domain 后一般稳定；删除 Domain 再生成才会变。
-- **想关掉/止损？** Railway 项目里 **Settings → Delete Project** 即可，停止计费。
+- **部署失败？** 命令行会显示日志；最常见是依赖装不上（看 `requirements.txt`）。也可在 railway.com 项目页 **Deployments** 看详细日志。
+- **改了代码怎么更新？** 在本地改完，执行 `railway up` 重新部署即可。
+- **想关掉/止损？** railway.com 项目里 **Settings → Delete Project** 即可，停止计费。
+- **忘记 CONNECTOR_API_KEY？** 在 railway.com 项目 **Variables** 里能看到（值被遮一部分，可改）。
+
+> 想直接复制纯命令版，见同目录 **`RAILWAY-CLI-CHEATSHEET.md`**。
