@@ -34,8 +34,8 @@ PORT=9000 CONNECTOR_API_KEY=sk-xxx python mcp_server.py
 - `batch_check(items, workers=8)` → 批量探测，返回 `{total, results}`
 
 ## 上线两步（详见子文档）
-1. **部署**：见 `DEPLOY.md` —— 用 Docker 部署到自有服务器/云（推荐国内云，探测国内源延迟低），
-   拿到公网 HTTPS 的 `https://你的域名/mcp`。
+1. **部署**：推荐走 **Railway 零服务器部署** 👉 见 `RAILWAY-DEPLOY.md`（已配好 `Procfile`/`railway.json`，代码已初始化为 Git 仓库，按手册推到 GitHub 即可自动部署拿 HTTPS 域名）。
+   也有 Docker 自有云方案 👉 见 `DEPLOY.md`（推荐国内云，探测国内源延迟低）。
 2. **发布**：见 `PUBLISH-CONNECTOR.md` —— 在 open.workbuddy.cn「发布管理 → 连接器」逐项填表，
    端点填 `https://你的域名/mcp`、鉴权填对应 `CONNECTOR_API_KEY`，并贴上合规声明；设为付费连接器即可变现。
 
